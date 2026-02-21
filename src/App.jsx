@@ -19,9 +19,18 @@ function App() {
   new Date().toISOString().slice(0, 7)
   );
 
+  const [budget, setBudget] = useState(() => {
+    const savedBudget = localStorage.getItem("budget");
+    return savedBudget ? JSON.parse(savedBudget) : 0;
+  });
+
   useEffect(() => {
     localStorage.setItem("transactions", JSON.stringify(transactions));
   }, [transactions]);
+
+  useEffect(() => {
+    localStorage.setItem("budget", JSON.stringify(budget));
+  }, [budget]);
 
   const handleAdd = () => {
     if (!amount) return;
@@ -56,6 +65,12 @@ function App() {
 
   const balance = totalIncome - totalExpense;
 
+  const remainingBudget = budget - totalExpense;
+
+  const rawPercent = budget > 0 ? (totalExpense / budget) * 100 : 0;
+
+  const budgetUsedPercent = Math.min(rawPercent, 100);
+
   return (
     <div className="container">
       <h1>RupeeLog</h1>
@@ -66,6 +81,46 @@ function App() {
           onChange={(e) => setSelectedMonth(e.target.value)}
         />
       </div>
+
+      <div style={{ marginBottom: "15px" }}>
+        <input
+          type="number"
+          placeholder="Set monthly budget"
+          value={budget}
+          onChange={(e) => setBudget(Number(e.target.value))}
+        />
+      </div>
+
+      {budget > 0 && (
+        <div style={{ marginBottom: "20px" }}>
+          <p>
+            Budget: ₹ {budget} | Remaining: ₹ {remainingBudget}
+          </p>
+
+          <div
+            style={{
+              height: "10px",
+              background: "#ddd",
+              borderRadius: "5px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                width: `${budgetUsedPercent}%`,
+                height: "100%",
+                background:
+                  rawPercent > 100
+                    ? "red"
+                    : rawPercent > 80
+                    ? "orange"
+                    : "green",
+                transition: "0.3s",
+              }}
+            ></div>
+          </div>
+        </div>
+      )}
 
       <Summary
         balance={balance}
