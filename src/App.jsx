@@ -3,6 +3,7 @@ import "./App.css";
 import Summary from "./components/Summary";
 import TransactionForm from "./components/TransactionForm";
 import TransactionList from "./components/TransactionList";
+import CategoryChart from "./components/CategoryChart";
 
 function App() {
   const [transactions, setTransactions] = useState(() => {
@@ -143,7 +144,9 @@ function App() {
       <TransactionList
         transactions={filteredTransactions}
         handleDelete={handleDelete}
-      />  
+      />
+
+      <CategoryChart transactions={filteredTransactions} /> 
     </div>
   );
 }
