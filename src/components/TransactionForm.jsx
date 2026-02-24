@@ -1,14 +1,18 @@
-function TransactionForm({
+function TransactionForm
+({
   amount,
   setAmount,
   type,
   setType,
   category,
   setCategory,
+  customCategory,
+  setCustomCategory,
   date,
   setDate,
   handleAdd,
-}) {
+}) 
+{
   return (
     <div className="form">
       <input
@@ -30,6 +34,15 @@ function TransactionForm({
         <option>Shopping</option>
         <option>Others</option>
       </select>
+
+      { category === "Others" && (
+        <input
+            type="text"
+            placeholder="Enter custom category"
+            value={customCategory}
+            onChange={(e) => setCustomCategory(e.target.value)}
+        />
+      )}
 
       <input
         type="date"

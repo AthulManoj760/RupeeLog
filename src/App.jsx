@@ -14,6 +14,8 @@ function App() {
   const [amount, setAmount] = useState("");
   const [type, setType] = useState("expense");
   const [category, setCategory] = useState("Food");
+  const [customCategory, setCustomCategory] = useState("");
+  
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
   const [selectedMonth, setSelectedMonth] = useState(
@@ -34,18 +36,29 @@ function App() {
   }, [budget]);
 
   const handleAdd = () => {
+    console.log("Category:", category);
+    console.log("CustomCategory:", customCategory);
+
     if (!amount) return;
+
+    let finalCategory = category;
+
+    if (category === "Others") {
+      if (!customCategory.trim()) return;
+      finalCategory = customCategory.trim();
+    }
 
     const newTransaction = {
       id: Date.now(),
       amount: parseFloat(amount),
       type: type,
-      category: category,
+      category: finalCategory,
       date: date,
     };
 
     setTransactions([...transactions, newTransaction]);
     setAmount("");
+    setCustomCategory("");
   };
 
   const handleDelete = (id) => {
@@ -136,6 +149,8 @@ function App() {
         setType={setType}
         category={category}
         setCategory={setCategory}
+        customCategory={customCategory}
+        setCustomCategory={setCustomCategory}
         date={date}
         setDate={setDate}
         handleAdd={handleAdd}
