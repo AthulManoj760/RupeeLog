@@ -87,16 +87,16 @@ function App() {
 
   return (
     <div className="container">
+      
       <h1>RupeeLog</h1>
-      <div style={{ margin: "15px 0" }}>
+      
+      <div className="top-controls">
         <input
           type="month"
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
         />
-      </div>
 
-      <div style={{ marginBottom: "15px" }}>
         <input
           type="number"
           placeholder="Set monthly budget"

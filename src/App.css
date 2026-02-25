@@ -1,34 +1,146 @@
-.summary {
-  display: flex;
-  justify-content: space-between;
-  margin: 20px 0;
+/* Global Reset */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #0f172a;
+  color: #f1f5f9;
 }
 
+/* Main Container */
+.container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+/* Headline */
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 28px;
+}
+
+/* Card */
 .card {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Summary Cards */
+.summary {
+  display: flex;
+  gap: 15px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.summary .card {
   flex: 1;
-  margin: 5px;
-  padding: 10px;
-  background: white;
-  border-radius: 8px;
   text-align: center;
 }
 
 .balance {
-  background: #094655;
+  background: #1e293b;
 }
 
 .income {
-  background: #50ad66;
+  background: #064e3b;
 }
 
 .expense {
-  background: #ff3849;
+  background: #7f1d1d;
+}
+
+/* Form */
+.form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.form input,
+.form select {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #334155;
+  color: white;
+}
+
+.form input:focus,
+.form select:focus {
+  outline: 2px solid #3b82f6;
+}
+
+/* Button */
+button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #2563eb;
+}
+
+/* Transaction List */
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  background: #1e293b;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.2s;
+}
+
+li:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
 }
 
 .income-item {
-  border-left: 5px solid green;
+  border-left: 4px solid #22c55e;
 }
 
 .expense-item {
-  border-left: 5px solid red;
+  border-left: 4px solid #ef4444;
+}
+
+.top-controls {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-bottom: 25px;
+}
+
+.top-controls input {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #334155;
+  color: white;
+}
+
+li button {
+  background: #3b82f6;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+li button:hover {
+  background: #2563eb;
 }
