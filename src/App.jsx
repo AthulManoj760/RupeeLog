@@ -15,6 +15,27 @@ function App() {
   const [type, setType] = useState("expense");
   const [category, setCategory] = useState("Food");
   const [customCategory, setCustomCategory] = useState("");
+  const [editId, setEditId] = useState(null);
+
+  const handleEdit = (transaction) => {
+    console.log("Editing transaction:", transaction);
+
+    setAmount(transaction.amount);
+    setType(transaction.type);
+
+    const predefinedCategories = ["Food", "Travel", "Rent", "Shopping"];
+
+    if (predefinedCategories.includes(transaction.category)) {
+      setCategory(transaction.category);
+      setCustomCategory("");
+    } else {
+      setCategory("Others");
+      setCustomCategory(transaction.category);
+    }
+
+    setDate(transaction.date);
+    setEditId(transaction.id);
+  };
   
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
@@ -36,9 +57,6 @@ function App() {
   }, [budget]);
 
   const handleAdd = () => {
-    console.log("Category:", category);
-    console.log("CustomCategory:", customCategory);
-
     if (!amount) return;
 
     let finalCategory = category;
@@ -48,17 +66,40 @@ function App() {
       finalCategory = customCategory.trim();
     }
 
-    const newTransaction = {
-      id: Date.now(),
-      amount: parseFloat(amount),
-      type: type,
-      category: finalCategory,
-      date: date,
-    };
+    if (editId !== null) {
+      // UPDATE MODE
+      const updatedTransactions = transactions.map((t) =>
+        t.id === editId
+          ? {
+              ...t,
+              amount: parseFloat(amount),
+              type: type,
+              category: finalCategory,
+              date: date,
+            }
+          : t
+      );
 
-    setTransactions([...transactions, newTransaction]);
+      setTransactions(updatedTransactions);
+      setEditId(null);
+    } else {
+      // ADD MODE
+      const newTransaction = {
+        id: Date.now(),
+        amount: parseFloat(amount),
+        type: type,
+        category: finalCategory,
+        date: date,
+      };
+
+      setTransactions([...transactions, newTransaction]);
+    }
+
+    // Reset form
     setAmount("");
+    setCategory("Food");
     setCustomCategory("");
+    setDate(new Date().toISOString().split("T")[0]);
   };
 
   const handleDelete = (id) => {
@@ -155,6 +196,7 @@ function App() {
           date={date}
           setDate={setDate}
           handleAdd={handleAdd}
+          editId={editId}
         />
       </div>
 
@@ -163,6 +205,7 @@ function App() {
         <TransactionList
           transactions={filteredTransactions}
           handleDelete={handleDelete}
+          handleEdit={handleEdit}
         />
       </div>
 

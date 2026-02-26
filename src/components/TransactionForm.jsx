@@ -11,6 +11,7 @@ function TransactionForm
   date,
   setDate,
   handleAdd,
+  editId,
 }) 
 {
   return (
@@ -50,7 +51,9 @@ function TransactionForm
         onChange={(e) => setDate(e.target.value)}
       />
 
-      <button onClick={handleAdd}>Add</button>
+      <button onClick={handleAdd}>
+        {editId !== null ? "Update" : "Add"}
+      </button>
     </div>
   );
 }
