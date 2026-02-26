@@ -86,15 +86,21 @@ function App() {
   const budgetUsedPercent = Math.min(rawPercent, 100);
 
   return (
-    <div className="container">
-      
-      <h1>RupeeLog</h1>
-      
-      <div className="top-controls">
+  <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className="max-w-5xl mx-auto px-6 py-12">
+
+      {/* Title */}
+      <h1 className="text-4xl font-semibold text-center mb-10 tracking-tight">
+        RupeeLog
+      </h1>
+
+      {/* Month + Budget Controls */}
+      <div className="flex flex-col md:flex-row gap-4 justify-center items-center mb-8">
         <input
           type="month"
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
+          className="bg-slate-700 px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
         />
 
         <input
@@ -102,68 +108,72 @@ function App() {
           placeholder="Set monthly budget"
           value={budget}
           onChange={(e) => setBudget(Number(e.target.value))}
+          className="bg-slate-700 px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
+      {/* Budget Progress */}
       {budget > 0 && (
-        <div style={{ marginBottom: "20px" }}>
-          <p>
+        <div className="mb-10">
+          <p className="text-center mb-2 text-slate-300">
             Budget: ₹ {budget} | Remaining: ₹ {remainingBudget}
           </p>
 
-          <div
-            style={{
-              height: "10px",
-              background: "#ddd",
-              borderRadius: "5px",
-              overflow: "hidden",
-            }}
-          >
+          <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden">
             <div
-              style={{
-                width: `${budgetUsedPercent}%`,
-                height: "100%",
-                background:
-                  rawPercent > 100
-                    ? "red"
-                    : rawPercent > 80
-                    ? "orange"
-                    : "green",
-                transition: "0.3s",
-              }}
+              className={`h-full transition-all duration-300 ${
+                rawPercent > 100
+                  ? "bg-red-500"
+                  : rawPercent > 80
+                  ? "bg-yellow-500"
+                  : "bg-green-500"
+              }`}
+              style={{ width: `${budgetUsedPercent}%` }}
             ></div>
           </div>
         </div>
       )}
 
+      {/* Summary */}
       <Summary
         balance={balance}
         totalIncome={totalIncome}
         totalExpense={totalExpense}
       />
 
-      <TransactionForm
-        amount={amount}
-        setAmount={setAmount}
-        type={type}
-        setType={setType}
-        category={category}
-        setCategory={setCategory}
-        customCategory={customCategory}
-        setCustomCategory={setCustomCategory}
-        date={date}
-        setDate={setDate}
-        handleAdd={handleAdd}
-      />
+      {/* Transaction Form */}
+      <div className="mt-10">
+        <TransactionForm
+          amount={amount}
+          setAmount={setAmount}
+          type={type}
+          setType={setType}
+          category={category}
+          setCategory={setCategory}
+          customCategory={customCategory}
+          setCustomCategory={setCustomCategory}
+          date={date}
+          setDate={setDate}
+          handleAdd={handleAdd}
+        />
+      </div>
 
-      <TransactionList
-        transactions={filteredTransactions}
-        handleDelete={handleDelete}
-      />
+      {/* Transactions List */}
+      <div className="mt-10">
+        <TransactionList
+          transactions={filteredTransactions}
+          handleDelete={handleDelete}
+        />
+      </div>
 
-      <CategoryChart transactions={filteredTransactions} /> 
+      {/* Category Chart */}
+      <div className="mt-12 flex justify-center">
+        <CategoryChart transactions={filteredTransactions} />
+      </div>
+
     </div>
-  );
+  </div>
+);
 }
 
 export default App;
