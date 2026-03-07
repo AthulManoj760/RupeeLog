@@ -10,7 +10,7 @@ import {
 
 import { motion } from "framer-motion";
 
-function Login({ setUser }) {
+function Login({ switchToSignup }) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,13 +22,14 @@ function Login({ setUser }) {
 
     try {
 
-      const userCredential = await signInWithEmailAndPassword(
+      await signInWithEmailAndPassword(
         auth,
         email,
         password
       );
 
-      setUser(userCredential.user);
+      // No setUser needed
+      // Firebase auth state will update automatically
 
     } catch (error) {
 
@@ -45,8 +46,9 @@ function Login({ setUser }) {
 
     try {
 
-      const result = await signInWithPopup(auth, provider);
-      setUser(result.user);
+      await signInWithPopup(auth, provider);
+
+      // Again no setUser needed
 
     } catch (error) {
 
@@ -120,10 +122,24 @@ function Login({ setUser }) {
         {/* Google login */}
         <button
           onClick={googleLogin}
-          className="w-full bg-red-500 hover:bg-red-600 transition py-3 rounded-lg font-medium"
+          className="w-full bg-red-500 hover:bg-red-600 transition py-3 rounded-lg font-medium mb-4"
         >
           Sign in with Google
         </button>
+
+        {/* Signup link */}
+        <p className="text-center text-sm text-slate-300">
+
+          Don't have an account?
+
+          <button
+            onClick={switchToSignup}
+            className="text-blue-400 ml-1 hover:underline"
+          >
+            Signup
+          </button>
+
+        </p>
 
       </motion.div>
 

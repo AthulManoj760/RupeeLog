@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
-import "./App.css";
-
 import { auth } from "./firebase";
+
 import { onAuthStateChanged, signOut } from "firebase/auth";
 
 import Login from "./auth/Login";
 import Signup from "./auth/Signup";
 
-import Summary from "./components/Summary";
 import TransactionForm from "./components/TransactionForm";
 import TransactionList from "./components/TransactionList";
+import Summary from "./components/Summary";
+import Profile from "./components/Profile";
+
 import CategoryChart from "./components/CategoryChart";
 
 function App() {
@@ -17,168 +18,209 @@ function App() {
   const [user, setUser] = useState(null);
   const [showSignup, setShowSignup] = useState(false);
 
-  const [transactions, setTransactions] = useState(() => {
-    const saved = localStorage.getItem("transactions");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [transactions, setTransactions] = useState([]);
 
   const [amount, setAmount] = useState("");
   const [type, setType] = useState("expense");
   const [category, setCategory] = useState("Food");
   const [customCategory, setCustomCategory] = useState("");
-  const [editId, setEditId] = useState(null);
 
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-
-  const [selectedMonth, setSelectedMonth] = useState(
-    new Date().toISOString().slice(0, 7)
+  const [date, setDate] = useState(
+    new Date().toISOString().split("T")[0]
   );
 
-  const [budget, setBudget] = useState(() => {
-    const savedBudget = localStorage.getItem("budget");
-    return savedBudget ? JSON.parse(savedBudget) : 0;
-  });
+  const [editId, setEditId] = useState(null);
+
+  const [showProfile, setShowProfile] = useState(false);
+
+  const [username, setUsername] = useState("User");
+
+  /* ---------------- AUTH LISTENER ---------------- */
 
   useEffect(() => {
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+
       setUser(currentUser);
+
+      if (currentUser) {
+
+        const savedTransactions = JSON.parse(
+          localStorage.getItem(`transactions_${currentUser.uid}`)
+        ) || [];
+
+        setTransactions(savedTransactions);
+
+        const savedName = localStorage.getItem(
+          `username_${currentUser.uid}`
+        );
+
+        if (savedName) setUsername(savedName);
+
+      }
+
     });
 
     return () => unsubscribe();
+
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("transactions", JSON.stringify(transactions));
-  }, [transactions]);
+  /* ---------------- SAVE TRANSACTIONS ---------------- */
 
   useEffect(() => {
-    localStorage.setItem("budget", JSON.stringify(budget));
-  }, [budget]);
 
-  const logout = () => {
-    signOut(auth);
-  };
+    if (user) {
 
-  const handleEdit = (transaction) => {
-    setAmount(transaction.amount);
-    setType(transaction.type);
+      localStorage.setItem(
+        `transactions_${user.uid}`,
+        JSON.stringify(transactions)
+      );
 
-    const predefinedCategories = ["Food", "Travel", "Rent", "Shopping"];
-
-    if (predefinedCategories.includes(transaction.category)) {
-      setCategory(transaction.category);
-      setCustomCategory("");
-    } else {
-      setCategory("Others");
-      setCustomCategory(transaction.category);
     }
 
-    setDate(transaction.date);
-    setEditId(transaction.id);
-  };
+  }, [transactions, user]);
+
+  /* ---------------- CALCULATE SUMMARY ---------------- */
+
+  const income = transactions
+    .filter((t) => t.type === "income")
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const expense = transactions
+    .filter((t) => t.type === "expense")
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const balance = income - expense;
+
+  /* ---------------- ADD / UPDATE TRANSACTION ---------------- */
 
   const handleAdd = () => {
+
     if (!amount) return;
 
     let finalCategory = category;
 
     if (category === "Others") {
+
       if (!customCategory.trim()) return;
-      finalCategory = customCategory.trim();
+      finalCategory = customCategory;
+
     }
 
-    if (editId !== null) {
+    if (editId) {
 
-      const updatedTransactions = transactions.map((t) =>
-        t.id === editId
-          ? {
-              ...t,
-              amount: parseFloat(amount),
-              type: type,
-              category: finalCategory,
-              date: date,
-            }
-          : t
+      setTransactions(
+        transactions.map((t) =>
+          t.id === editId
+            ? {
+                ...t,
+                amount: parseFloat(amount),
+                type,
+                category: finalCategory,
+                date
+              }
+            : t
+        )
       );
 
-      setTransactions(updatedTransactions);
       setEditId(null);
 
     } else {
 
       const newTransaction = {
+
         id: Date.now(),
-        amount: parseFloat(amount),
-        type: type,
+        amount: Number(amount),
+        type,
         category: finalCategory,
-        date: date,
+        date
+
       };
 
       setTransactions([...transactions, newTransaction]);
+
     }
 
     setAmount("");
-    setCategory("Food");
     setCustomCategory("");
-    setDate(new Date().toISOString().split("T")[0]);
+
   };
+
+  /* ---------------- DELETE ---------------- */
 
   const handleDelete = (id) => {
+
     setTransactions(transactions.filter((t) => t.id !== id));
+
   };
 
-  const filteredTransactions = transactions.filter(
-    (t) => t.date && t.date.startsWith(selectedMonth)
-  );
+  /* ---------------- EDIT ---------------- */
 
-  const totalIncome = filteredTransactions
-    .filter((t) => t.type === "income")
-    .reduce((acc, t) => acc + t.amount, 0);
+  const handleEdit = (transaction) => {
 
-  const totalExpense = filteredTransactions
-    .filter((t) => t.type === "expense")
-    .reduce((acc, t) => acc + t.amount, 0);
+    setAmount(transaction.amount);
+    setType(transaction.type);
+    setCategory(transaction.category);
+    setDate(transaction.date);
 
-  const balance = totalIncome - totalExpense;
+    setEditId(transaction.id);
 
-  const remainingBudget = budget - totalExpense;
+  };
 
-  const rawPercent = budget > 0 ? (totalExpense / budget) * 100 : 0;
+  /* ---------------- LOGOUT ---------------- */
 
-  const budgetUsedPercent = Math.min(rawPercent, 100);
+  const logout = async () => {
 
+    await signOut(auth);
+
+    setUser(null);
+
+  };
+
+  /* ---------------- LOGIN / SIGNUP ---------------- */
 
   if (!user) {
+
+    if (showSignup) {
+
+      return (
+        <Signup
+          setUser={setUser}
+          goToLogin={() => setShowSignup(false)}
+        />
+      );
+
+    }
+
     return (
-      <div style={{ textAlign: "center", marginTop: "50px" }}>
-        {showSignup ? (
-          <>
-            <Signup setUser={setUser} />
-            <p onClick={() => setShowSignup(false)}>
-              Already have an account? Login
-            </p>
-          </>
-        ) : (
-          <>
-            <Login setUser={setUser} />
-            <p onClick={() => setShowSignup(true)}>
-              Don't have an account? Signup
-            </p>
-          </>
-        )}
-      </div>
+      <Login
+        setUser={setUser}
+        goToSignup={() => setShowSignup(true)}
+      />
     );
+
   }
 
+  /* ---------------- MAIN DASHBOARD ---------------- */
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
 
-      <div className="max-w-5xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-6">
 
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-4xl font-semibold tracking-tight">
-            RupeeLog
-          </h1>
+      {/* HEADER */}
+
+      <div className="flex justify-between items-center mb-10">
+
+        <h1 className="text-4xl font-bold">RupeeLog</h1>
+
+        <div className="flex items-center gap-4">
+
+          <button
+            onClick={() => setShowProfile(!showProfile)}
+            className="bg-slate-700 px-4 py-2 rounded-lg"
+          >
+            👤 {username}
+          </button>
 
           <button
             onClick={logout}
@@ -186,84 +228,60 @@ function App() {
           >
             Logout
           </button>
-        </div>
 
-        <div className="flex flex-col md:flex-row gap-4 justify-center items-center mb-8">
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="bg-slate-700 px-4 py-2 rounded-lg"
-          />
-
-          <input
-            type="number"
-            placeholder="Set monthly budget"
-            value={budget}
-            onChange={(e) => setBudget(Number(e.target.value))}
-            className="bg-slate-700 px-4 py-2 rounded-lg"
-          />
-        </div>
-
-        {budget > 0 && (
-          <div className="mb-10">
-            <p className="text-center mb-2 text-slate-300">
-              Budget: ₹ {budget} | Remaining: ₹ {remainingBudget}
-            </p>
-
-            <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden">
-              <div
-                className={`h-full transition-all duration-300 ${
-                  rawPercent > 100
-                    ? "bg-red-500"
-                    : rawPercent > 80
-                    ? "bg-yellow-500"
-                    : "bg-green-500"
-                }`}
-                style={{ width: `${budgetUsedPercent}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
-
-        <Summary
-          balance={balance}
-          totalIncome={totalIncome}
-          totalExpense={totalExpense}
-        />
-
-        <div className="mt-10">
-          <TransactionForm
-            amount={amount}
-            setAmount={setAmount}
-            type={type}
-            setType={setType}
-            category={category}
-            setCategory={setCategory}
-            customCategory={customCategory}
-            setCustomCategory={setCustomCategory}
-            date={date}
-            setDate={setDate}
-            handleAdd={handleAdd}
-            editId={editId}
-          />
-        </div>
-
-        <div className="mt-10">
-          <TransactionList
-            transactions={filteredTransactions}
-            handleDelete={handleDelete}
-            handleEdit={handleEdit}
-          />
-        </div>
-
-        <div className="mt-12 flex justify-center">
-          <CategoryChart transactions={filteredTransactions} />
         </div>
 
       </div>
+
+      {/* PROFILE PANEL */}
+
+      {showProfile && (
+        <Profile
+          user={user}
+          setUsername={setUsername}
+          close={() => setShowProfile(false)}
+        />
+      )}
+
+      {/* SUMMARY */}
+
+      <Summary
+        balance={balance}
+        income={income}
+        expense={expense}
+      />
+
+      {/* TRANSACTION FORM */}
+
+      <TransactionForm
+        amount={amount}
+        setAmount={setAmount}
+        type={type}
+        setType={setType}
+        category={category}
+        setCategory={setCategory}
+        customCategory={customCategory}
+        setCustomCategory={setCustomCategory}
+        date={date}
+        setDate={setDate}
+        handleAdd={handleAdd}
+        editId={editId}
+      />
+
+      {/* TRANSACTION LIST */}
+
+      <TransactionList
+        transactions={transactions}
+        handleDelete={handleDelete}
+        handleEdit={handleEdit}
+      />
+
+      <CategoryChart transactions={transactions} />
+
     </div>
+
   );
+
 }
 
 export default App;

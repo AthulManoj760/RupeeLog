@@ -5,7 +5,7 @@ import logo from "../assets/rupeelog-logo.svg";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { motion } from "framer-motion";
 
-function Signup({ setUser }) {
+function Signup({ switchToLogin }) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,13 +17,13 @@ function Signup({ setUser }) {
 
     try {
 
-      const userCredential = await createUserWithEmailAndPassword(
+      await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
 
-      setUser(userCredential.user);
+      // Firebase auth state will update automatically
 
     } catch (error) {
 
@@ -91,10 +91,24 @@ function Signup({ setUser }) {
         <button
           onClick={signupUser}
           disabled={loading}
-          className="w-full bg-blue-500 hover:bg-blue-600 transition py-3 rounded-lg font-medium shadow-lg shadow-blue-500/30"
+          className="w-full bg-blue-500 hover:bg-blue-600 transition py-3 rounded-lg font-medium shadow-lg shadow-blue-500/30 mb-4"
         >
           {loading ? "Creating account..." : "Create Account"}
         </button>
+
+        {/* Login link */}
+        <p className="text-center text-sm text-slate-300">
+
+          Already have an account?
+
+          <button
+            onClick={switchToLogin}
+            className="text-blue-400 ml-1 hover:underline"
+          >
+            Login
+          </button>
+
+        </p>
 
       </motion.div>
 
