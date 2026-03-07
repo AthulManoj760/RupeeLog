@@ -1,6 +1,17 @@
 import { useState, useEffect } from "react";
 import { auth } from "./firebase";
 
+import {
+  collection,
+  addDoc,
+  deleteDoc,
+  updateDoc,
+  doc,
+  getDocs
+} from "firebase/firestore";
+
+import { db } from "./firebase";
+
 import { onAuthStateChanged, signOut } from "firebase/auth";
 
 import Login from "./auth/Login";
@@ -35,7 +46,29 @@ function App() {
 
   const [username, setUsername] = useState("User");
 
-  /* ---------------- AUTH LISTENER ---------------- */
+  useEffect(() => {
+
+    if (!user) {
+      setUsername("User");
+      return;
+    }
+
+    const fetchUsername = async () => {
+
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        setUsername(snap.data().username || "User");
+      } else {
+        setUsername("User");
+      }
+
+    };
+
+    fetchUsername();
+
+  }, [user]);
 
   useEffect(() => {
 
@@ -69,16 +102,26 @@ function App() {
 
   useEffect(() => {
 
-    if (user) {
+    if (!user) return;
 
-      localStorage.setItem(
-        `transactions_${user.uid}`,
-        JSON.stringify(transactions)
+    const fetchTransactions = async () => {
+
+      const querySnapshot = await getDocs(
+        collection(db, "users", user.uid, "transactions")
       );
 
-    }
+      const data = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-  }, [transactions, user]);
+      setTransactions(data);
+
+    };
+
+    fetchTransactions();
+
+  }, [user]);
 
   /* ---------------- CALCULATE SUMMARY ---------------- */
 
@@ -94,50 +137,54 @@ function App() {
 
   /* ---------------- ADD / UPDATE TRANSACTION ---------------- */
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
 
     if (!amount) return;
 
     let finalCategory = category;
 
     if (category === "Others") {
-
       if (!customCategory.trim()) return;
       finalCategory = customCategory;
-
     }
 
+    const transactionData = {
+      amount: Number(amount),
+      type,
+      category: finalCategory,
+      date
+    };
+
+    // UPDATE transaction
     if (editId) {
+
+      await updateDoc(
+        doc(db, "users", user.uid, "transactions", editId),
+        transactionData
+      );
 
       setTransactions(
         transactions.map((t) =>
-          t.id === editId
-            ? {
-                ...t,
-                amount: parseFloat(amount),
-                type,
-                category: finalCategory,
-                date
-              }
-            : t
+          t.id === editId ? { id: editId, ...transactionData } : t
         )
       );
 
       setEditId(null);
 
-    } else {
+    } 
 
-      const newTransaction = {
+    // ADD new transaction
+    else {
 
-        id: Date.now(),
-        amount: Number(amount),
-        type,
-        category: finalCategory,
-        date
+      const docRef = await addDoc(
+        collection(db, "users", user.uid, "transactions"),
+        transactionData
+      );
 
-      };
-
-      setTransactions([...transactions, newTransaction]);
+      setTransactions([
+        ...transactions,
+        { id: docRef.id, ...transactionData }
+      ]);
 
     }
 
@@ -148,9 +195,15 @@ function App() {
 
   /* ---------------- DELETE ---------------- */
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
 
-    setTransactions(transactions.filter((t) => t.id !== id));
+    await deleteDoc(
+      doc(db, "users", user.uid, "transactions", id)
+    );
+
+    setTransactions(
+      transactions.filter((t) => t.id !== id)
+    );
 
   };
 
