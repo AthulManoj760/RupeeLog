@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { auth } from "../firebase";
+import logo from "../assets/rupeelog-logo.svg";
 
-import {
-  createUserWithEmailAndPassword
-} from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { motion } from "framer-motion";
 
 function Signup({ setUser }) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const signupUser = async () => {
+
+    setLoading(true);
 
     try {
 
@@ -23,67 +26,77 @@ function Signup({ setUser }) {
       setUser(userCredential.user);
 
     } catch (error) {
+
       alert(error.message);
+
     }
 
+    setLoading(false);
   };
 
   return (
 
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="relative min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
 
-      <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl w-[380px] max-w-[90%]">
+      {/* Glow background */}
+      <div className="absolute w-[500px] h-[500px] bg-blue-500 rounded-full blur-[150px] opacity-30 -top-40 -left-40"></div>
+      <div className="absolute w-[500px] h-[500px] bg-purple-500 rounded-full blur-[150px] opacity-30 bottom-[-200px] right-[-200px]"></div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ scale: 1.02 }}
+        transition={{ duration: 0.5 }}
+        className="relative backdrop-blur-xl bg-white/10 border border-white/20 p-8 rounded-2xl shadow-2xl w-[380px] max-w-[90%]"
+      >
 
         {/* Logo */}
         <div className="text-center mb-8">
 
-          <div className="text-5xl text-blue-400 font-bold mb-3">
-            ₹
-          </div>
+          <img
+            src={logo}
+            alt="RupeeLog Logo"
+            className="w-16 h-16 mx-auto mb-3"
+          />
 
           <h1 className="text-3xl font-bold text-white">
             RupeeLog
           </h1>
 
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="text-slate-300 text-sm mt-1">
             Create your account
           </p>
 
         </div>
 
-
         {/* Email */}
-
         <input
           type="email"
           placeholder="Email"
-          className="w-full mb-4 px-4 py-3 rounded-lg bg-slate-700 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full mb-4 px-4 py-3 rounded-lg bg-white/10 text-white border border-white/20 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
-
         {/* Password */}
-
         <input
           type="password"
           placeholder="Password"
-          className="w-full mb-5 px-4 py-3 rounded-lg bg-slate-700 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full mb-5 px-4 py-3 rounded-lg bg-white/10 text-white border border-white/20 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
-
         {/* Signup button */}
-
         <button
           onClick={signupUser}
-          className="w-full bg-blue-500 hover:bg-blue-600 transition py-3 rounded-lg font-medium"
+          disabled={loading}
+          className="w-full bg-blue-500 hover:bg-blue-600 transition py-3 rounded-lg font-medium shadow-lg shadow-blue-500/30"
         >
-          Create Account
+          {loading ? "Creating account..." : "Create Account"}
         </button>
 
-      </div>
+      </motion.div>
 
     </div>
   );
