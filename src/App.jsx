@@ -7,7 +7,8 @@ import {
   deleteDoc,
   updateDoc,
   doc,
-  getDocs
+  getDoc,
+  onSnapshot
 } from "firebase/firestore";
 
 import { db } from "./firebase";
@@ -23,15 +24,18 @@ import Summary from "./components/Summary";
 import Profile from "./components/Profile";
 
 import CategoryChart from "./components/CategoryChart";
+import CashFlowChart from "./components/CashFlowChart";
 
 function App() {
 
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [user, setUser] = useState(null);
   const [showSignup, setShowSignup] = useState(false);
 
   const [transactions, setTransactions] = useState([]);
 
   const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
   const [type, setType] = useState("expense");
   const [category, setCategory] = useState("Food");
   const [customCategory, setCustomCategory] = useState("");
@@ -45,6 +49,20 @@ function App() {
   const [showProfile, setShowProfile] = useState(false);
 
   const [username, setUsername] = useState("User");
+
+  // Theme effect
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
 
   useEffect(() => {
 
@@ -77,12 +95,8 @@ function App() {
       setUser(currentUser);
 
       if (currentUser) {
-
-        const savedTransactions = JSON.parse(
-          localStorage.getItem(`transactions_${currentUser.uid}`)
-        ) || [];
-
-        setTransactions(savedTransactions);
+        // We removed localStorage seeding for transactions to prevent stale data conflicts
+        // Transactions will load immediately via real-time onSnapshot listeners 
 
         const savedName = localStorage.getItem(
           `username_${currentUser.uid}`
@@ -102,24 +116,27 @@ function App() {
 
   useEffect(() => {
 
-    if (!user) return;
+    if (!user) {
+      setTransactions([]);
+      return;
+    }
 
-    const fetchTransactions = async () => {
+    const unSub = onSnapshot(
+      collection(db, "users", user.uid, "transactions"),
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data()
+        }));
 
-      const querySnapshot = await getDocs(
-        collection(db, "users", user.uid, "transactions")
-      );
+        // Sort by date descending
+        data.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      const data = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+        setTransactions(data);
+      }
+    );
 
-      setTransactions(data);
-
-    };
-
-    fetchTransactions();
+    return () => unSub();
 
   }, [user]);
 
@@ -134,12 +151,35 @@ function App() {
     .reduce((acc, t) => acc + t.amount, 0);
 
   const balance = income - expense;
+  
+  // BUDGET ALERTS
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+
+  const currentMonthTransactions = transactions.filter(t => {
+    const tDate = new Date(t.date);
+    return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
+  });
+
+  const monthIncome = currentMonthTransactions
+    .filter((t) => t.type === "income")
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const monthExpense = currentMonthTransactions
+    .filter((t) => t.type === "expense")
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const isOverBudget = monthIncome > 0 && monthExpense > monthIncome * 0.8;
 
   /* ---------------- ADD / UPDATE TRANSACTION ---------------- */
 
   const handleAdd = async () => {
 
-    if (!amount) return;
+    const numAmount = Number(amount);
+    if (!numAmount || numAmount <= 0) {
+      alert("Please enter a valid positive amount.");
+      return;
+    }
 
     let finalCategory = category;
 
@@ -149,7 +189,8 @@ function App() {
     }
 
     const transactionData = {
-      amount: Number(amount),
+      amount: numAmount,
+      description,
       type,
       category: finalCategory,
       date
@@ -157,38 +198,23 @@ function App() {
 
     // UPDATE transaction
     if (editId) {
-
       await updateDoc(
         doc(db, "users", user.uid, "transactions", editId),
         transactionData
       );
-
-      setTransactions(
-        transactions.map((t) =>
-          t.id === editId ? { id: editId, ...transactionData } : t
-        )
-      );
-
       setEditId(null);
-
-    } 
-
-    // ADD new transaction
-    else {
-
-      const docRef = await addDoc(
+    } else {
+      // ADD new transaction
+      await addDoc(
         collection(db, "users", user.uid, "transactions"),
         transactionData
       );
-
-      setTransactions([
-        ...transactions,
-        { id: docRef.id, ...transactionData }
-      ]);
-
     }
 
+    // Since we use onSnapshot, we don't need to manually update local state anymore.
+
     setAmount("");
+    setDescription("");
     setCustomCategory("");
 
   };
@@ -201,9 +227,7 @@ function App() {
       doc(db, "users", user.uid, "transactions", id)
     );
 
-    setTransactions(
-      transactions.filter((t) => t.id !== id)
-    );
+    // Manual state update removed thanks to onSnapshot
 
   };
 
@@ -212,6 +236,7 @@ function App() {
   const handleEdit = (transaction) => {
 
     setAmount(transaction.amount);
+    setDescription(transaction.description || "");
     setType(transaction.type);
     setCategory(transaction.category);
     setDate(transaction.date);
@@ -258,26 +283,45 @@ function App() {
 
   return (
 
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-6">
+    <div className="min-h-screen w-full p-4 md:p-8 font-sans transition-colors duration-300">
+      
+      <div className="relative max-w-5xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-10 shadow-xl dark:shadow-2xl transition-colors duration-300 z-10">
 
       {/* HEADER */}
-
       <div className="flex justify-between items-center mb-10">
-
-        <h1 className="text-4xl font-bold">RupeeLog</h1>
+        <div className="flex items-center gap-3 md:gap-4">
+          <div className="hidden sm:flex items-center justify-center bg-gradient-to-br from-blue-500 to-emerald-500 w-12 h-12 rounded-xl shadow-lg shadow-emerald-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+              <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+              <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+            </svg>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-teal-400 to-emerald-400 tracking-tight pb-2 pr-2 leading-relaxed">
+            RupeeLog<span className="text-emerald-500">.</span>
+          </h1>
+        </div>
 
         <div className="flex items-center gap-4">
 
           <button
-            onClick={() => setShowProfile(!showProfile)}
-            className="bg-slate-700 px-4 py-2 rounded-lg"
+            onClick={toggleTheme}
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+            aria-label="Toggle Theme"
           >
-            👤 {username}
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+
+          <button
+            onClick={() => setShowProfile(!showProfile)}
+            className={`px-4 py-2 rounded-xl transition flex items-center gap-2 font-medium ${showProfile ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-500/50' : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'}`}
+          >
+            <span>👤</span> <span className="hidden sm:inline">{username}</span>
           </button>
 
           <button
             onClick={logout}
-            className="bg-red-500 px-4 py-2 rounded-lg"
+            className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 px-4 py-2 rounded-xl hover:bg-red-100 dark:hover:bg-red-500/20 transition font-medium"
           >
             Logout
           </button>
@@ -293,6 +337,7 @@ function App() {
           user={user}
           setUsername={setUsername}
           close={() => setShowProfile(false)}
+          theme={theme}
         />
       )}
 
@@ -302,6 +347,8 @@ function App() {
         balance={balance}
         income={income}
         expense={expense}
+        isOverBudget={isOverBudget}
+        theme={theme}
       />
 
       {/* TRANSACTION FORM */}
@@ -309,6 +356,8 @@ function App() {
       <TransactionForm
         amount={amount}
         setAmount={setAmount}
+        description={description}
+        setDescription={setDescription}
         type={type}
         setType={setType}
         category={category}
@@ -319,6 +368,7 @@ function App() {
         setDate={setDate}
         handleAdd={handleAdd}
         editId={editId}
+        theme={theme}
       />
 
       {/* TRANSACTION LIST */}
@@ -327,10 +377,15 @@ function App() {
         transactions={transactions}
         handleDelete={handleDelete}
         handleEdit={handleEdit}
+        theme={theme}
       />
 
-      <CategoryChart transactions={transactions} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <CashFlowChart transactions={transactions} theme={theme} />
+        <CategoryChart transactions={transactions} theme={theme} />
+      </div>
 
+      </div>
     </div>
 
   );

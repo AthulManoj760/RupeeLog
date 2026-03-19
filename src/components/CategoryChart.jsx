@@ -2,7 +2,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recha
 
 const COLORS = ["#00C49F", "#0088FE", "#FFBB28", "#FF8042", "#AA336A"];
 
-function CategoryChart({ transactions }) {
+function CategoryChart({ transactions, theme }) {
 
   // Filter only expenses
   const expenseTransactions = transactions.filter(
@@ -30,21 +30,26 @@ function CategoryChart({ transactions }) {
   // If no expense data
   if (categoryData.length === 0) {
     return (
-      <div className="mt-10 text-center text-slate-400">
+      <div className="mt-10 text-center text-slate-500 dark:text-slate-400">
         No expense data to display
       </div>
     );
   }
 
+  const tooltipBg  = theme === 'dark' ? '#1e293b' : '#ffffff';
+  const tooltipBorder = theme === 'dark' ? '1px solid #334155' : '1px solid #e2e8f0';
+  const tooltipColor = theme === 'dark' ? '#f8fafc' : '#0f172a';
+
   return (
 
-    <div className="w-full h-[350px] mt-10 bg-slate-800 rounded-xl p-6">
+    <div className="w-full h-[400px] mt-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm dark:shadow-xl flex flex-col transition-colors duration-300">
 
-      <h3 className="text-xl text-white text-center mb-4">
+      <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-6">
         Category-wise Expense
       </h3>
 
-      <ResponsiveContainer width="100%" height="100%">
+      <div className="flex-1 min-h-0 w-full">
+        <ResponsiveContainer width="100%" height="100%">
 
         <PieChart>
 
@@ -70,13 +75,16 @@ function CategoryChart({ transactions }) {
 
           <Tooltip
             formatter={(value) => `₹ ${value}`}
+            contentStyle={{ backgroundColor: tooltipBg, border: tooltipBorder, borderRadius: '12px', color: tooltipColor }}
+            itemStyle={{ color: tooltipColor }}
           />
 
-          <Legend />
+          <Legend wrapperStyle={{ paddingTop: '20px' }} />
 
         </PieChart>
 
-      </ResponsiveContainer>
+        </ResponsiveContainer>
+      </div>
 
     </div>
 

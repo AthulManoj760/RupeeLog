@@ -15,8 +15,10 @@ function Login({ switchToSignup }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const loginUser = async () => {
+    setError("");
 
     setLoading(true);
 
@@ -31,9 +33,9 @@ function Login({ switchToSignup }) {
       // No setUser needed
       // Firebase auth state will update automatically
 
-    } catch (error) {
+    } catch (err) {
 
-      alert(error.message);
+      setError(err.message);
 
     }
 
@@ -41,7 +43,7 @@ function Login({ switchToSignup }) {
   };
 
   const googleLogin = async () => {
-
+    setError("");
     const provider = new GoogleAuthProvider();
 
     try {
@@ -50,9 +52,9 @@ function Login({ switchToSignup }) {
 
       // Again no setUser needed
 
-    } catch (error) {
+    } catch (err) {
 
-      alert(error.message);
+      setError(err.message);
 
     }
   };
@@ -91,6 +93,13 @@ function Login({ switchToSignup }) {
           </p>
 
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-500/20 text-red-400 text-sm p-3 rounded-lg mb-4 text-center border border-red-500/30">
+            {error}
+          </div>
+        )}
 
         {/* Email */}
         <input

@@ -10,8 +10,10 @@ function Signup({ switchToLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const signupUser = async () => {
+    setError("");
 
     setLoading(true);
 
@@ -25,9 +27,9 @@ function Signup({ switchToLogin }) {
 
       // Firebase auth state will update automatically
 
-    } catch (error) {
+    } catch (err) {
 
-      alert(error.message);
+      setError(err.message);
 
     }
 
@@ -68,6 +70,13 @@ function Signup({ switchToLogin }) {
           </p>
 
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-500/20 text-red-400 text-sm p-3 rounded-lg mb-4 text-center border border-red-500/30">
+            {error}
+          </div>
+        )}
 
         {/* Email */}
         <input
