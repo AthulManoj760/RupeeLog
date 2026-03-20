@@ -264,7 +264,9 @@ function App() {
       return (
         <Signup
           setUser={setUser}
-          goToLogin={() => setShowSignup(false)}
+          switchToLogin={() => setShowSignup(false)}
+          theme={theme}
+          toggleTheme={toggleTheme}
         />
       );
 
@@ -273,7 +275,9 @@ function App() {
     return (
       <Login
         setUser={setUser}
-        goToSignup={() => setShowSignup(true)}
+        switchToSignup={() => setShowSignup(true)}
+        theme={theme}
+        toggleTheme={toggleTheme}
       />
     );
 
