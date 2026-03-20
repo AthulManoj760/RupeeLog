@@ -287,30 +287,30 @@ function App() {
 
   return (
 
-    <div className="min-h-screen w-full p-4 md:p-8 font-sans transition-colors duration-300">
+    <div className="min-h-screen w-full p-2 sm:p-4 md:p-8 font-sans transition-colors duration-300">
       
-      <div className="relative max-w-5xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-10 shadow-xl dark:shadow-2xl transition-colors duration-300 z-10">
+      <div className="relative max-w-5xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-6 md:p-10 shadow-xl dark:shadow-2xl transition-colors duration-300 z-10">
 
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-10">
-        <div className="flex items-center gap-3 md:gap-4">
-          <div className="hidden sm:flex items-center justify-center bg-gradient-to-br from-blue-500 to-emerald-500 w-12 h-12 rounded-xl shadow-lg shadow-emerald-500/20">
+      <div className="flex justify-between items-center mb-8 md:mb-10 gap-2">
+        <div className="flex items-center gap-2 md:gap-4 min-w-0">
+          <div className="hidden sm:flex items-center justify-center bg-gradient-to-br from-blue-500 to-emerald-500 w-12 h-12 rounded-xl shadow-lg shadow-emerald-500/20 shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
               <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
               <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
             </svg>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-teal-400 to-emerald-400 tracking-tight pb-2 pr-2 leading-relaxed">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-teal-400 to-emerald-400 tracking-tight pb-2 pr-1 md:pr-2 leading-tight truncate">
             RupeeLog<span className="text-emerald-500">.</span>
           </h1>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
 
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center"
             aria-label="Toggle Theme"
           >
             {theme === 'dark' ? '☀️' : '🌙'}
@@ -318,14 +318,14 @@ function App() {
 
           <button
             onClick={() => setShowProfile(!showProfile)}
-            className={`px-4 py-2 rounded-xl transition flex items-center gap-2 font-medium ${showProfile ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-500/50' : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'}`}
+            className={`px-3 py-2 sm:px-4 rounded-xl transition flex items-center justify-center gap-2 font-medium text-sm sm:text-base ${showProfile ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-500/50' : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'}`}
           >
             <span>👤</span> <span className="hidden sm:inline">{username}</span>
           </button>
 
           <button
             onClick={logout}
-            className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 px-4 py-2 rounded-xl hover:bg-red-100 dark:hover:bg-red-500/20 transition font-medium"
+            className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 px-3 py-2 sm:px-4 rounded-xl hover:bg-red-100 dark:hover:bg-red-500/20 transition font-medium text-sm sm:text-base"
           >
             Logout
           </button>
